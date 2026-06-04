@@ -1,13 +1,100 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DocumentType {
+  CPF
+  CNPJ
+}
+
+enum PlanType {
+  prepaid
+  postpaid
+}
+
+enum Priority {
+  normal
+  urgent
+}
+
+enum SenderType {
+  client
+  user
+}
+
+enum MessageStatus {
+  queued
+  processing
+  sent
+  delivered
+  read
+  failed
+}
+
+model Client {
+  id           String       @id @default(uuid())
+  name         String
+  documentId   String       @unique
+  documentType DocumentType
+  planType     PlanType
+  balance      Decimal      @default(0) @db.Decimal(10, 2)
+  monthlyLimit Decimal      @default(0) @db.Decimal(10, 2)
+  monthlyUsage Decimal      @default(0) @db.Decimal(10, 2)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  conversations Conversation[]
+  transactions  Transaction[]
+}
+
+model Conversation {
+  id                 String    @id @default(uuid())
+  client             Client    @relation(fields: [clientId], references: [id])
+  clientId           String
+  recipientId        String
+  recipientName      String
+  lastMessageContent String?
+  lastMessageTime    DateTime?
+  unreadCount        Int       @default(0)
+  createdAt          DateTime  @default(now())
+
+  messages Message[]
+
+  @@index([clientId])
+}
+
+model Message {
+  id             String        @id @default(uuid())
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+  conversationId String
+  content        String
+  senderId       String
+  senderType     SenderType
+  priority       Priority      @default(normal)
+  status         MessageStatus @default(queued)
+  cost           Decimal       @default(0) @db.Decimal(10, 2)
+  createdAt      DateTime      @default(now())
+
+  transaction Transaction?
+
+  @@index([conversationId])
+}
+
+model Transaction {
+  id           String   @id @default(uuid())
+  client       Client   @relation(fields: [clientId], references: [id])
+  clientId     String
+  message      Message? @relation(fields: [messageId], references: [id])
+  messageId    String?  @unique
+  amount       Decimal  @db.Decimal(10, 2)
+  type         String
+  balanceAfter Decimal  @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+
+  @@index([clientId])
 }
