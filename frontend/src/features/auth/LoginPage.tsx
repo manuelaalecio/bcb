@@ -50,7 +50,9 @@ export function LoginPage() {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? 'Falha ao autenticar'
-      throw new Error(typeof msg === 'string' ? msg : 'Falha ao autenticar')
+      throw new Error(typeof msg === 'string' ? msg : 'Falha ao autenticar', {
+        cause: err,
+      })
     }
   }
 

@@ -53,7 +53,9 @@ export function RegisterPage() {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? 'Falha ao cadastrar'
-      throw new Error(typeof msg === 'string' ? msg : 'Falha ao cadastrar')
+      throw new Error(typeof msg === 'string' ? msg : 'Falha ao cadastrar', {
+        cause: err,
+      })
     }
   }
 
