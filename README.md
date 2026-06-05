@@ -154,7 +154,7 @@ Organizado em **vertical slices**: cada feature dona do seu módulo, controller,
 
 **Exemplo encontrado** — `messages/` contém exatamente: [messages.module.ts](backend/src/messages/messages.module.ts), [messages.controller.ts](backend/src/messages/messages.controller.ts), [messages.service.ts](backend/src/messages/messages.service.ts) e `dto/` com [send-message.dto.ts](backend/src/messages/dto/send-message.dto.ts) e [send-message-response.dto.ts](backend/src/messages/dto/send-message-response.dto.ts).
 
-> ⚠️ **Dead code:** [app.controller.ts](backend/src/app.controller.ts) e [app.service.ts](backend/src/app.service.ts) existem mas **não estão registrados** em [app.module.ts](backend/src/app.module.ts) (não há `controllers`). Logo `GET /` não responde "Hello World!" — o que quebra o teste e2e padrão (ver seção 15).
+> ⚠️ **Dead code:** [app.controller.ts](backend/src/app.controller.ts) e [app.service.ts](backend/src/app.service.ts) existem mas **não estão registrados** em [app.module.ts](backend/src/app.module.ts) (não há `controllers`). Logo `GET /` retorna 404 (ver seção 15).
 
 ### Frontend — `frontend/src/`
 | Diretório | Responsabilidade | Exemplos |
@@ -248,10 +248,12 @@ npm run dev                 # Vite (porta varia, ex.: :5173)
 - **Frontend** ([frontend/.env.example](frontend/.env.example)): `VITE_API_URL` (default `http://localhost:3000`). No Docker, é "assada" no build via `ARG`.
 
 ### 5.5 Rodar testes
+O Jest e os scripts continuam configurados ([backend/package.json](backend/package.json)), mas **não há
+suítes de teste no momento** — o scaffolding padrão do Nest foi removido por testar apenas código
+boilerplate. Ao adicionar testes (`*.spec.ts`), use:
 ```bash
 cd backend
-npm run test            # unit (Jest)  — hoje só app.controller.spec
-npm run test:e2e        # e2e         — ⚠️ quebrado (ver seção 15)
+npm run test            # unit (Jest)
 npm run test:cov        # cobertura
 npx jest src/path/to/file.spec.ts   # um único arquivo
 ```
@@ -762,7 +764,6 @@ Passo a passo:
 | Frontend chama URL errada da API | `VITE_API_URL` "assada" no build do Docker | Rebuild com o `ARG` correto |
 | Prisma: `Environment variable not found: DATABASE_URL` | `.env` ausente no backend | Criar `backend/.env` com `DATABASE_URL` |
 | `prisma generate` falha por OpenSSL | Falta libssl (containers slim) | Imagem já instala `openssl` ([backend/Dockerfile](backend/Dockerfile)) |
-| Teste e2e `GET /` falha | `AppController` não registrado | Registrar em `app.module.ts` ou remover o teste (seção 15) |
 | `409` ao cadastrar | Documento já existe | Usar outro documento |
 
 ---
@@ -770,7 +771,7 @@ Passo a passo:
 ## 15. Débitos Técnicos e Melhorias
 
 ### Bugs / inconsistências
-1. **`AppController`/`AppService` órfãos** — não registrados em [app.module.ts](backend/src/app.module.ts); `GET /` retorna 404 e **quebra** o e2e padrão ([app.e2e-spec.ts](backend/test/app.e2e-spec.ts)). Registrar ou remover ambos + ajustar teste.
+1. **`AppController`/`AppService` órfãos** — não registrados em [app.module.ts](backend/src/app.module.ts); `GET /` retorna 404. São código morto: registrar (se um healthcheck for desejado) ou remover ambos.
 2. **Indicador de digitação reflete para o próprio remetente** — `handleTyping` faz `server.to(room).emit(...)` para **toda** a sala, incluindo quem enviou; como o único participante real é o próprio cliente, ele tende a ver "digitando…" de si mesmo ([chat.gateway.ts](backend/src/realtime/chat.gateway.ts) + [useChatSocket.ts](frontend/src/hooks/useChatSocket.ts)). Usar `client.broadcast.to(room)`.
 3. **Presença é fictícia** — `presence` usa `recipientId: client.id` (o socket id) e o frontend liga/desliga `isRecipientOnline` para qualquer evento, sem correlacionar com o destinatário da conversa aberta ([chat.gateway.ts](backend/src/realtime/chat.gateway.ts)).
 4. **`unreadCount` nunca é incrementado** — fica sempre 0 (exceto o que vier do seed); o worker não o atualiza. O badge de não lidas é, na prática, inerte.
@@ -786,7 +787,7 @@ Passo a passo:
 10. **Fila e estado em memória** — `PriorityQueue` e timers vivem no processo ([message-queue.service.ts](backend/src/queue/message-queue.service.ts), [message.worker.ts](backend/src/queue/message.worker.ts)): reinício perde mensagens enfileiradas e os timers `delivered/read` não sobrevivem nem são cancelados no shutdown. Migrar para fila durável (Redis/BullMQ) ou reprocessar `queued` no boot.
 11. **Throughput de 1 msg/s** — o worker desenfileira só 1 item por tick de 1s. Processar em lote/loop por tick.
 12. **Custos duplicados** — `0.25/0.50` no backend e no frontend; risco de divergência. Centralizar (ex.: expor via endpoint/config).
-13. **Cobertura de testes quase nula** — backend só com `app.controller.spec` (e e2e quebrado); frontend sem testes. Adicionar testes de billing (422), `messages.service` (transação) e hooks.
+13. **Sem testes** — o scaffolding padrão do Nest foi removido (testava apenas boilerplate). Não há cobertura no backend nem no frontend. Adicionar testes de billing (422), `messages.service` (transação) e hooks.
 14. **README desatualizado** — checklist de funcionalidades em [README.md](README.md) está com itens desmarcados embora implementados; "Premissas" e "Trabalho futuro" incompletos.
 15. **Dockerfile do backend roda `seed` em todo start** — em produção isso re-popula dados a cada deploy. Mover seed para etapa manual/controlada.
 
@@ -815,7 +816,7 @@ Acompanhe o diagrama da seção 11.3.
 ### Dia 5 — Primeira contribuição (sugestões de baixo risco)
 Boas tarefas para começar, baseadas na seção 15:
 - **Corrigir o typing self-echo** (item 2) trocando para `client.broadcast.to(room)`.
-- **Registrar ou remover `AppController`** e consertar o e2e (item 1).
+- **Registrar ou remover `AppController`/`AppService`** (código morto — item 1).
 - **Adicionar checagem de posse** em `/clients/:id/credit` (item 6).
 
 Fluxo de contribuição: crie branch a partir de `main`, faça commit por slice (`feat(...)`/`fix(...)`), rode `npm run lint` nos dois projetos e abra PR.

@@ -13,7 +13,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run start:dev       # dev server with watch on :3000
 npm run build           # compile TypeScript
 npm run test            # unit tests (Jest)
-npm run test:e2e        # e2e tests
 npm run test:cov        # test coverage
 npm run lint            # ESLint --fix
 npm run format          # Prettier
