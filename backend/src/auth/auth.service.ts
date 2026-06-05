@@ -16,7 +16,9 @@ export class AuthService {
     })
 
     if (!client || !client.active) {
-      throw new UnauthorizedException('Credenciais inválidas ou cliente inativo.')
+      throw new UnauthorizedException(
+        'Credenciais inválidas ou cliente inativo.',
+      )
     }
 
     const token = this.jwtService.sign({ sub: client.id })
@@ -30,8 +32,12 @@ export class AuthService {
         documentType: client.documentType,
         planType: client.planType,
         active: client.active,
-        balance: client.planType === 'prepaid' ? Number(client.balance) : undefined,
-        limit: client.planType === 'postpaid' ? Number(client.monthlyLimit) : undefined,
+        balance:
+          client.planType === 'prepaid' ? Number(client.balance) : undefined,
+        limit:
+          client.planType === 'postpaid'
+            ? Number(client.monthlyLimit)
+            : undefined,
       },
     }
   }

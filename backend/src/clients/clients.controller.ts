@@ -1,5 +1,10 @@
 import { Body, Controller, Param, Patch, Post, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 import { AuthGuard } from '../common/guards/auth.guard'
 import { ClientsService } from './clients.service'
 import { CreateClientDto } from './dto/create-client.dto'
@@ -11,9 +16,15 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Criar cliente', description: 'Cria um novo cliente (endpoint administrativo).' })
+  @ApiOperation({
+    summary: 'Criar cliente',
+    description: 'Cria um novo cliente (endpoint administrativo).',
+  })
   @ApiResponse({ status: 201, description: 'Cliente criado com sucesso.' })
-  @ApiResponse({ status: 409, description: 'Já existe um cliente com este documento.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Já existe um cliente com este documento.',
+  })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   create(@Body() dto: CreateClientDto) {
     return this.clientsService.create(dto)
@@ -24,7 +35,8 @@ export class ClientsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Adicionar crédito ou limite',
-    description: 'Para pré-pago: adiciona saldo. Para pós-pago: aumenta o limite mensal.',
+    description:
+      'Para pré-pago: adiciona saldo. Para pós-pago: aumenta o limite mensal.',
   })
   @ApiResponse({ status: 200, description: 'Crédito atualizado com sucesso.' })
   @ApiResponse({ status: 401, description: 'Token inválido ou não fornecido.' })

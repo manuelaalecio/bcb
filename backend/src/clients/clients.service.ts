@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateClientDto } from './dto/create-client.dto'
@@ -9,7 +13,9 @@ export class ClientsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateClientDto) {
-    const existing = await this.prisma.client.findUnique({ where: { documentId: dto.documentId } })
+    const existing = await this.prisma.client.findUnique({
+      where: { documentId: dto.documentId },
+    })
     if (existing) {
       throw new ConflictException('Já existe um cliente com este documento.')
     }
