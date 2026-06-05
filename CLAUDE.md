@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**BCB (Big Chat Brasil)** — fullstack chat platform for companies to message end-customers. Companies authenticate via CPF/CNPJ, send messages with a priority queue, and are billed per message (prepaid or postpaid). The full spec is in [ESPECIFICACAO-BCB.md](ESPECIFICACAO-BCB.md) — treat it as the source of truth for business rules and architecture decisions.
+**BCB (Big Chat Brasil)** — fullstack chat platform for companies to message end-customers. Companies authenticate via CPF/CNPJ, send messages with a priority queue, and are billed per message (prepaid or postpaid). The full project documentation is in [README.md](README.md) — it describes what the code actually does today (architecture, API, flows, and known technical debt).
 
 ## Commands
 
