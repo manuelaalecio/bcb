@@ -1,6 +1,17 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
+import { Client } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
+
+interface GuardRequest {
+  headers: { authorization?: string }
+  client: Client
+}
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -10,8 +21,8 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest()
-    const authorization = request.headers['authorization'] as string | undefined
+    const request = context.switchToHttp().getRequest<GuardRequest>()
+    const authorization = request.headers['authorization']
 
     if (!authorization?.startsWith('Bearer ')) {
       throw new UnauthorizedException('Token não fornecido.')
@@ -26,7 +37,9 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Token inválido ou expirado.')
     }
 
-    const client = await this.prisma.client.findUnique({ where: { id: payload.sub } })
+    const client = await this.prisma.client.findUnique({
+      where: { id: payload.sub },
+    })
     if (!client || !client.active) {
       throw new UnauthorizedException('Cliente não encontrado ou inativo.')
     }
