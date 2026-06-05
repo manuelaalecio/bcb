@@ -71,20 +71,22 @@ estilo WhatsApp.
 
 ## Começando (Docker — recomendado)
 
+Com **Docker** instalado, **um único comando sobe tudo** (banco + backend + frontend):
+
 ```bash
-# 1. Clonar
 git clone <url-do-repositorio>
 cd bcb-fullstack
-
-# 2. Criar o arquivo de variáveis a partir do exemplo
-cp .env.example .env
-
-# 3. Subir tudo (db + backend + frontend)
 docker compose up --build
 ```
 
-Ao subir, o container do backend **aplica as migrations e roda o seed automaticamente**
-(`prisma migrate deploy && npm run seed`), então o banco já vem populado com clientes de exemplo.
+Pronto — abra **http://localhost:8080** e faça login com um [cliente de exemplo](#como-entrar-com-um-cliente-de-seed).
+
+Não é preciso criar `.env`, instalar dependências nem rodar migrations à mão:
+
+- O [docker-compose.yml](docker-compose.yml) já define **valores padrão** para todas as variáveis
+  (usuário/senha/banco do Postgres e `JWT_SECRET`) — sem `.env`, ele usa esses defaults.
+- O container do backend **aplica as migrations e roda o seed automaticamente** na subida
+  (`prisma migrate deploy && npm run seed`), então o banco já vem populado com clientes de exemplo.
 
 Serviços disponíveis:
 
@@ -95,7 +97,16 @@ Serviços disponíveis:
 | Swagger (docs) | http://localhost:3000/docs |
 | PostgreSQL     | localhost:5432             |
 
-Para parar: `Ctrl+C` e, se quiser remover os volumes (zerar o banco), `docker compose down -v`.
+> **Quer customizar?** Copie `cp .env.example .env` e ajuste as credenciais **antes** de subir. Em
+> produção, defina sempre um `JWT_SECRET` próprio — o padrão `dev-secret-change-me` é só para
+> desenvolvimento.
+
+Comandos úteis:
+
+- Parar: `Ctrl+C`.
+- Subir em segundo plano: `docker compose up --build -d`.
+- Zerar o banco (remove volumes): `docker compose down -v`.
+- Garantir portas livres: `3000` (API), `8080` (frontend) e `5432` (Postgres).
 
 ---
 
